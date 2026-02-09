@@ -1,0 +1,5 @@
+# Build output
+build/
+
+# Compilation database
+compile_commands.json
