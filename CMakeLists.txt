@@ -11,30 +11,65 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add compiler definition
 add_compile_definitions(_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
 
-# Add your source files
+# --------------------------------------------------
+# Sources
+# --------------------------------------------------
 file(GLOB SOURCES "src/*.cpp")
-add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Include the raylib headers
-include_directories(${CMAKE_SOURCE_DIR}/include/raylib/include)
+# ImGui core sources
+set(IMGUI_SOURCES
+    include/rlImGui/imgui/imgui.cpp
+    include/rlImGui/imgui/imgui_draw.cpp
+    include/rlImGui/imgui/imgui_widgets.cpp
+    include/rlImGui/imgui/imgui_tables.cpp
+)
 
-# Link raylib library
-target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include/raylib/lib)
+# rlImGui source
+set(RLIMGUI_SOURCES
+    include/rlImGui/rlImGui.cpp
+)
+
+add_executable(${PROJECT_NAME}
+    ${SOURCES}
+    ${IMGUI_SOURCES}
+    ${RLIMGUI_SOURCES}
+)
+
+# --------------------------------------------------
+# Include directories
+# --------------------------------------------------
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/raylib/include
+    ${CMAKE_SOURCE_DIR}/include/rlImGui
+    ${CMAKE_SOURCE_DIR}/include/rlImGui/imgui
+)
+
+# --------------------------------------------------
+# Link raylib
+# --------------------------------------------------
+target_link_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/raylib/lib
+)
+
 target_link_libraries(${PROJECT_NAME} raylib)
 
-# On Windows, link system libs used by raylib
+# Windows system libs required by raylib
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} winmm)
 endif()
 
-# Copy raylib DLL next to the built executable
+# --------------------------------------------------
+# Copy raylib DLL next to the executable
+# --------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/include/raylib/lib/raylib.dll"
         $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-# Copy compile_commands.json to project root for clangd
+# --------------------------------------------------
+# Copy compile_commands.json for clangd
+# --------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_BINARY_DIR}/compile_commands.json
